@@ -12,6 +12,7 @@ public class LocationSdk {
     public final CityService city;
     public final AreaService area;
     public final LocationService location;
+    public final ResolveService resolve;
 
     public LocationSdk(String baseUrl, String tenantId, String clientId, String clientSecret) {
         this.apiClient = new ApiClient(baseUrl, tenantId, clientId, clientSecret);
@@ -22,5 +23,8 @@ public class LocationSdk {
         this.city = new CityService(apiClient);
         this.area = new AreaService(apiClient);
         this.location = new LocationService(apiClient);
+        this.resolve = new ResolveService(apiClient);
     }
+
+
 }

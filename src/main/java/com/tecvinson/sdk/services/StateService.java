@@ -2,7 +2,7 @@ package com.tecvinson.sdk.services;
 
 import com.tecvinson.sdk.ApiClient;
 import com.tecvinson.sdk.ApiException;
-import com.tecvinson.sdk.services.models.State;
+import com.tecvinson.sdk.models.State;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

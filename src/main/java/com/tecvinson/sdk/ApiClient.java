@@ -1,8 +1,10 @@
 package com.tecvinson.sdk;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.net.URI;
 import java.net.http.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 
 public class ApiClient {
 
@@ -14,6 +16,11 @@ public class ApiClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    // Retry config
+    private static final int MAX_RETRIES = 3;
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
+
     public ApiClient(String baseUrl, String tenantId, String clientId, String clientSecret) {
         this.baseUrl = baseUrl;
         this.tenantId = tenantId;
@@ -22,87 +29,107 @@ public class ApiClient {
 
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(CONNECT_TIMEOUT)
                 .build();
 
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper().findAndRegisterModules();
+    }
+
+    // ✅ URL builder (prevents // bugs)
+    private String buildUrl(String path) {
+        if (baseUrl.endsWith("/") && path.startsWith("/")) {
+            return baseUrl + path.substring(1);
+        } else if (!baseUrl.endsWith("/") && !path.startsWith("/")) {
+            return baseUrl + "/" + path;
+        }
+        return baseUrl + path;
     }
 
     private HttpRequest.Builder baseRequestBuilder(String path) {
         return HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + path))
+                .uri(URI.create(buildUrl(path)))
+                .timeout(REQUEST_TIMEOUT)
                 .header("X-TENANT-ID", tenantId)
                 .header("X-CLIENT-ID", clientId)
                 .header("X-CLIENT-SECRET", clientSecret)
                 .header("Content-Type", "application/json");
     }
 
-    // GET request
+    // ========================
+    // HTTP METHODS
+    // ========================
+
     public HttpResponse<String> get(String path) throws ApiException {
-        try {
-            HttpRequest request = baseRequestBuilder(path)
-                    .GET()
-                    .build();
+        HttpRequest request = baseRequestBuilder(path)
+                .GET()
+                .build();
 
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            checkResponseStatus(response);
-            return response;
-
-        } catch (Exception e) {
-            throw new ApiException("GET request failed: " + e.getMessage(), e);
-        }
+        return sendWithRetry(request, "GET");
     }
 
-    // POST request
     public HttpResponse<String> post(String path, Object body) throws ApiException {
-        try {
-            String jsonBody = toJson(body);
+        HttpRequest request = baseRequestBuilder(path)
+                .POST(HttpRequest.BodyPublishers.ofString(toJson(body)))
+                .build();
 
-            HttpRequest request = baseRequestBuilder(path)
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                    .build();
-
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            checkResponseStatus(response);
-            return response;
-
-        } catch (Exception e) {
-            throw new ApiException("POST request failed: " + e.getMessage(), e);
-        }
+        return sendWithRetry(request, "POST");
     }
 
-    // PUT request
     public HttpResponse<String> put(String path, Object body) throws ApiException {
-        try {
-            String jsonBody = toJson(body);
+        HttpRequest request = baseRequestBuilder(path)
+                .PUT(HttpRequest.BodyPublishers.ofString(toJson(body)))
+                .build();
 
-            HttpRequest request = baseRequestBuilder(path)
-                    .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
-                    .build();
+        return sendWithRetry(request, "PUT");
+    }
 
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    // ========================
+    // RETRY LOGIC (CRITICAL)
+    // ========================
 
-            checkResponseStatus(response);
-            return response;
+    private HttpResponse<String> sendWithRetry(HttpRequest request, String method) throws ApiException {
+        int attempt = 0;
 
-        } catch (Exception e) {
-            throw new ApiException("PUT request failed: " + e.getMessage(), e);
+        while (true) {
+            try {
+                attempt++;
+
+                HttpResponse<String> response =
+                        httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                checkResponseStatus(response);
+
+                return response;
+
+            } catch (Exception e) {
+
+                if (attempt >= MAX_RETRIES) {
+                    throw new ApiException(method + " request failed after "
+                            + attempt + " attempts: " + e.getMessage(), e);
+                }
+
+                // simple backoff
+                try {
+                    Thread.sleep(500L * attempt);
+                } catch (InterruptedException ignored) {}
+            }
         }
     }
 
-    // Validate HTTP Status
+    // ========================
+    // RESPONSE HANDLING
+    // ========================
+
     private void checkResponseStatus(HttpResponse<String> response) throws ApiException {
         int status = response.statusCode();
+
         if (status < 200 || status >= 300) {
-            throw new ApiException("HTTP Error: " + status + " - " + response.body());
+            throw new ApiException(
+                    "HTTP " + status + " error for [" + response.uri() + "]: " + response.body()
+            );
         }
     }
 
-    // Convert JSON response into object
     public <T> T parseResponse(HttpResponse<String> response, Class<T> clazz) throws ApiException {
         try {
             return objectMapper.readValue(response.body(), clazz);
@@ -111,7 +138,6 @@ public class ApiClient {
         }
     }
 
-    // Serialize object to JSON
     public String toJson(Object obj) throws ApiException {
         try {
             return objectMapper.writeValueAsString(obj);

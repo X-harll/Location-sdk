@@ -1,4 +1,4 @@
-package com.tecvinson.sdk.services.models;
+package com.tecvinson.sdk.models;
 
 import java.util.UUID;
 
