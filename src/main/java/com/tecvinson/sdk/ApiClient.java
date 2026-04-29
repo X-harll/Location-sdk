@@ -9,9 +9,7 @@ import java.time.Duration;
 public class ApiClient {
 
     private final String baseUrl;
-    private final String tenantId;
-    private final String clientId;
-    private final String clientSecret;
+
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -23,9 +21,7 @@ public class ApiClient {
 
     public ApiClient(String baseUrl, String tenantId, String clientId, String clientSecret) {
         this.baseUrl = baseUrl;
-        this.tenantId = tenantId;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
+
 
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
@@ -49,9 +45,6 @@ public class ApiClient {
         return HttpRequest.newBuilder()
                 .uri(URI.create(buildUrl(path)))
                 .timeout(REQUEST_TIMEOUT)
-                .header("X-TENANT-ID", tenantId)
-                .header("X-CLIENT-ID", clientId)
-                .header("X-CLIENT-SECRET", clientSecret)
                 .header("Content-Type", "application/json");
     }
 
