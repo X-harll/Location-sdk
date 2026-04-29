@@ -14,8 +14,8 @@ public class LocationSdk {
     public final LocationService location;
     public final ResolveService resolve;
 
-    public LocationSdk(String baseUrl, String tenantId, String clientId, String clientSecret) {
-        this.apiClient = new ApiClient(baseUrl, tenantId, clientId, clientSecret);
+    public LocationSdk(String baseUrl) {
+        this.apiClient = new ApiClient(baseUrl);
 
         this.continent = new ContinentService(apiClient);
         this.country = new CountryService(apiClient);

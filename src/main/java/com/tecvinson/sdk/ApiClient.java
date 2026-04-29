@@ -19,7 +19,7 @@ public class ApiClient {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
 
-    public ApiClient(String baseUrl, String tenantId, String clientId, String clientSecret) {
+    public ApiClient(String baseUrl) {
         this.baseUrl = baseUrl;
 
 
