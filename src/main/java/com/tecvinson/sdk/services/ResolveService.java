@@ -6,7 +6,6 @@ import com.tecvinson.sdk.models.ResolveLocationRequest;
 import com.tecvinson.sdk.models.ResolveLocationResponse;
 
 import java.net.http.HttpResponse;
-import java.util.UUID;
 
 public class ResolveService {
 
@@ -16,13 +15,19 @@ public class ResolveService {
         this.apiClient = apiClient;
     }
 
-    public UUID resolve(ResolveLocationRequest request) throws ApiException {
+    public ResolveLocationResponse resolve(
+            ResolveLocationRequest request
+    ) throws ApiException {
 
-        HttpResponse<String> response = apiClient.post("/api/locations/resolve", request);
+        HttpResponse<String> response =
+                apiClient.post(
+                        "/api/locations/resolve",
+                        request
+                );
 
-        ResolveLocationResponse result =
-                apiClient.parseResponse(response, ResolveLocationResponse.class);
-
-        return result.getLocationId();
+        return apiClient.parseResponse(
+                response,
+                ResolveLocationResponse.class
+        );
     }
 }

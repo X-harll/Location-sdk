@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class Location {
     private UUID id;
-    private String houseAddress;
+    private String address;
     private String streetName;
     private Double longitude;
     private Double latitude;
@@ -28,12 +28,12 @@ public class Location {
         this.id = id;
     }
 
-    public String getHouseAddress() {
-        return houseAddress;
+    public String getAddress() {
+        return address;
     }
 
-    public void setHouseAddress(String houseAddress) {
-        this.houseAddress = houseAddress;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getStreetName() {

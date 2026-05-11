@@ -8,7 +8,7 @@ public class ResolveLocationRequest {
     private String city;
     private String area;
 
-    private String houseAddress;
+    private String address;
     private String streetName;
 
     private Double latitude;
@@ -56,12 +56,12 @@ public class ResolveLocationRequest {
         this.area = area;
     }
 
-    public String getHouseAddress() {
-        return houseAddress;
+    public String getAddress() {
+        return address;
     }
 
-    public void setHouseAddress(String houseAddress) {
-        this.houseAddress = houseAddress;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getStreetName() {
