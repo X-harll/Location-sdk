@@ -2,6 +2,7 @@ package com.tecvinson.sdk.services;
 
 import com.tecvinson.sdk.ApiClient;
 import com.tecvinson.sdk.ApiException;
+import com.tecvinson.sdk.models.PageResponse;
 import com.tecvinson.sdk.models.State;
 
 import java.net.URLEncoder;
@@ -18,35 +19,40 @@ public class StateService {
     }
 
     public State createState(State state) throws ApiException {
-        var response = apiClient.post("/api/states", state);
+        var response = apiClient.post("/api/v1/states", state);
         return apiClient.parseResponse(response, State.class);
     }
 
     public State updateState(UUID id, State state) throws ApiException {
-        var response = apiClient.put("/api/states/" + id, state);
+        var response = apiClient.put("/api/v1/states/" + id, state);
         return apiClient.parseResponse(response, State.class);
     }
 
-    public List<State> getStates() throws ApiException {
-        var response = apiClient.get("/api/states");
-        State[] states = apiClient.parseResponse(response, State[].class);
-        return Arrays.asList(states);
+    public PageResponse<State> getStates(int page, int size) throws ApiException {
+
+        var response = apiClient.get("/api/v1/states?page="
+                        + page
+                        + "&size="
+                        + size
+        );
+
+        return apiClient.parseResponse(response, PageResponse.class);
     }
 
     public State getState(UUID id) throws ApiException {
-        var response = apiClient.get("/api/states/" + id);
+        var response = apiClient.get("/api/v1/states/" + id);
         return apiClient.parseResponse(response, State.class);
     }
 
     public List<State> getByCountryId(UUID countryId) throws ApiException {
-        var response = apiClient.get("/api/states/getbycountry/" + countryId);
+        var response = apiClient.get("/api/v1/states/getbycountry/" + countryId);
         State[] states = apiClient.parseResponse(response, State[].class);
         return Arrays.asList(states);
     }
 
     public List<State> getStatesByName(String name) throws ApiException {
         String encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8);
-        var response = apiClient.get("/api/states/api/search?name=" + encodedName);
+        var response = apiClient.get("/api/v1/states/api/search?name=" + encodedName);
         State[] states = apiClient.parseResponse(response, State[].class);
         return Arrays.asList(states);
     }

@@ -21,7 +21,7 @@ public class ResolveService {
 
         HttpResponse<String> response =
                 apiClient.post(
-                        "/api/locations/resolve",
+                        "/api/v1/locations/resolve",
                         request
                 );
 
